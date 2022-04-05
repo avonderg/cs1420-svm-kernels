@@ -1,3 +1,4 @@
+from turtle import dot
 import numpy as np
 from qp import solve_QP
 
@@ -11,7 +12,7 @@ def linear_kernel(xi, xj):
     :return: float64
     """
     #TODO
-    pass
+    return np.dot(np.transpose(xi), xj)
 
 
 def rbf_kernel(xi, xj, gamma=0.1):
@@ -24,6 +25,12 @@ def rbf_kernel(xi, xj, gamma=0.1):
     :return: float64
     """
     # TODO
+    # X_norm = np.einsum('ij,ij->i',xi,xi)
+    # Y_norm = np.einsum('ij,ij->i',xj,xj)
+    # K = np.exp(-gamma * (X_norm[:,None] + Y_norm[None,:] - 2 * np.dot(xi, xj)))
+
+    return np.exp(-gamma * np.sum(np.square(xi-xj)))
+    #if any buys -> divide by 2 at the end 
 
 
 def polynomial_kernel(xi, xj, c=2, d=2):
@@ -37,7 +44,9 @@ def polynomial_kernel(xi, xj, c=2, d=2):
     :return: float64
     """
     #TODO
-    pass
+    # inner = (np.transpose(xi)*xj) + c
+    inner = np.dot(np.transpose(xi), xj) + c
+    return inner**d
 
 
 class SVM(object):
@@ -77,9 +86,20 @@ class SVM(object):
 
         :return: the Gram matrix for the training data, a numpy array
         """
-
         # TODO 
-        pass
+        #apply kernel to each value inside matrix -> double for loop
+        # base_arr = np.zeros([len(self.train_inputs)])
+        # for i in range(base_arr[][0]):
+        n = len(self.train_inputs)
+        gram = np.zeros([n, n])
+        for i in range(n):
+            for j in range(i + 1):
+                gram[i, j] = np.inner(self.train_inputs[i], self.train_inputs[j])
+        indices = np.triu_indices(n)
+        gram[indices] = gram.T[indices]
+        return gram
+
+        
 
     def _objective_function(self, G):
         """
@@ -94,7 +114,25 @@ class SVM(object):
         """
 
         # TODO
-        pass
+        #matrix size 2m x 2m only top left corner is (2 labmba x G) and everything else is zero
+        m = self.train_inputs.shape[0]
+        Q = np.zeros((2*m, 2*m))
+        c = np.zeros(2*m) #length x
+
+        for i in range(len(Q)):
+            for j in range(len(Q)):
+                Q[i,j] = (G[i,j] * 2 * self.lambda_param)
+        # done finding Q       
+        # loop through and set each values
+        
+        for i in range(m, len(c)): #only loop through second half of the list!
+            c[i] = (1/m)
+        
+        return Q,c
+
+
+
+        
 
     def _inequality_constraint(self, G):
         """
@@ -118,7 +156,14 @@ class SVM(object):
         """
 
         #TODO
+        #double for loop
+        predictions = np.zeros(len(inputs))
+
+        for i in range(len(inputs)):
+            example = inputs[i]
+
         pass
+
 
     def accuracy(self, inputs, labels):
         """
@@ -130,4 +175,5 @@ class SVM(object):
         """
 
         #TODO
-        pass
+        predictions = self.predict(inputs)
+        return np.mean(predictions == labels) #ratio of number of correct matches
