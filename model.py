@@ -94,8 +94,8 @@ class SVM(object):
         n = len(self.train_inputs)
         gram = np.zeros([n, n])
         for i in range(n):
-            for j in range(i + 1):
-                gram[i, j] = np.inner(self.train_inputs[i], self.train_inputs[j])
+            for j in range(n):
+                gram[i, j] = self.kernel_func(self.train_inputs[i], self.train_inputs[j])
         indices = np.triu_indices(n)
         gram[indices] = gram.T[indices]
         return gram
@@ -153,15 +153,6 @@ class SVM(object):
         m = self.train_inputs.shape[0]
         A = np.zeros((2*m, 2*m))
         b = np.zeros(2*m)
-
-        # for i in range(m):
-        #     for j in range(m):
-        #         if ((-self.train_labels[i]) <= 0) and (self.train_labels[i] + self.train_inputs[i]*G[i]):
-        #             A[i,j] = (G[i,j] * 2 * self.lambda_param)
-        #             # A[i,j] = (G[i,j] * self.train_labels[i])
-
-        #     #train labels give certain rows for certain quadrants of A
-        #     b[i] = self.train_labels[i] #corresponds to constants?
        
         for i in range(m):
             for j in range(m):
@@ -169,7 +160,8 @@ class SVM(object):
         
         for i in range(0,2*m):
             for j in range(m,2*m):
-                A[i,j] = -1
+               if (i == j or i + m == j):
+                   A[i,j] = -1
         
         for i in range(0,m):
             b[i] = -1
