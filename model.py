@@ -1,4 +1,4 @@
-from turtle import dot
+# from turtle import dot
 import numpy as np
 from qp import solve_QP
 import quadprog
