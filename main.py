@@ -4,6 +4,7 @@ import random
 from collections import namedtuple
 
 import numpy as np
+import quadprog
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 

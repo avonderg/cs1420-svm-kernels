@@ -1,6 +1,7 @@
 from turtle import dot
 import numpy as np
 from qp import solve_QP
+import quadprog
 
 
 def linear_kernel(xi, xj):
@@ -75,7 +76,7 @@ class SVM(object):
 
         # TODO: Uncomment the next line when you have implemented _get_gram_matrix(),
         # _inequality_constraints() and _objective_function().
-        # self.alpha = solve_QP(Q, c, A, b)[:self.train_inputs.shape[0]]
+        self.alpha = solve_QP(Q, c, A, b)[:self.train_inputs.shape[0]]
 
     def _get_gram_matrix(self):
         """
@@ -119,8 +120,8 @@ class SVM(object):
         Q = np.zeros((2*m, 2*m))
         c = np.zeros(2*m) #length x
 
-        for i in range(len(Q)):
-            for j in range(len(Q)):
+        for i in range(m):
+            for j in range(m):
                 Q[i,j] = (G[i,j] * 2 * self.lambda_param)
         # done finding Q       
         # loop through and set each values
@@ -145,7 +146,35 @@ class SVM(object):
 
         # TODO (hint: you can think of x as the concatenation of all the alphas and
         # all the all the xi's; think about what this implies for what A should look like.)
-        pass 
+        #Ax \leq B
+        #x is a 2m 1D array
+        #partition into 4 parts
+        #epsilon i geq 0
+        m = self.train_inputs.shape[0]
+        A = np.zeros((2*m, 2*m))
+        b = np.zeros(2*m)
+
+        # for i in range(m):
+        #     for j in range(m):
+        #         if ((-self.train_labels[i]) <= 0) and (self.train_labels[i] + self.train_inputs[i]*G[i]):
+        #             A[i,j] = (G[i,j] * 2 * self.lambda_param)
+        #             # A[i,j] = (G[i,j] * self.train_labels[i])
+
+        #     #train labels give certain rows for certain quadrants of A
+        #     b[i] = self.train_labels[i] #corresponds to constants?
+       
+        for i in range(m):
+            for j in range(m):
+                A[i,j] = -1 * self.train_labels[i] * G[i,j] #top left quadrant
+        
+        for i in range(0,2*m):
+            for j in range(m,2*m):
+                A[i,j] = -1
+        
+        for i in range(0,m):
+            b[i] = -1
+
+        return A,b 
 
     def predict(self, inputs):
         """
@@ -159,10 +188,16 @@ class SVM(object):
         #double for loop
         predictions = np.zeros(len(inputs))
 
-        for i in range(len(inputs)):
-            example = inputs[i]
 
-        pass
+        for i in range(len(inputs)):
+            count = 0
+            for j in range(len(self.train_inputs)):
+                count+=(self.alpha[j]*self.kernel_func(self.train_inputs[j],inputs[i]))
+                if (count > 0):
+                    predictions[i] = 1
+                else:
+                    predictions[i] = -1
+        return predictions
 
 
     def accuracy(self, inputs, labels):
